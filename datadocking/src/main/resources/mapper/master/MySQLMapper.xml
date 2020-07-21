@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wdnyjx.Mapper.master.MySQLMapper">
+    <sql id="cdMachineColumns">
+        	dict.label as dicName,
+            ct.TERMINAL_CODE as iotNumber,
+            cm.MACHINE_MODEL as machineryEngine,
+            cm.FACTORY_NUMBER as factoryNumber,
+            cm.FRAME_NUMBER as drivingNumber,
+            cm.REMARKS as machineryModel,
+            cm.REMARKS as modelName,
+            so.parent_id as regionCode
+	</sql>
+    <sql id="cdMachineJoins">
+        left join sys_office so on so.id=cm.BELONG_GROUP_ID
+        left join cd_terminal ct on ct.id = cm.TML_ID
+        left join (select sv.value,sv.label from sys_dict_value sv,sys_dict_type st where st.id=sv.dict_type_id and st.type='machine_type') dict on dict.value=cm.machine_type
+    </sql>
+    <select id="listAll" resultType="com.wdnyjx.Entity.gjhn.MachineryInfo">
+        select
+            <include refid="cdMachineColumns"/>
+        FROM
+            cd_machine cm
+        <include refid="cdMachineJoins"/>
+        <where>
+            so.parent_ids like CONCAT(#{parentIds}, '%')
+        </where>
+    </select>
+    <select id="listTmls" resultType="com.wdnyjx.Entity.DB.TmlAndId">
+        select id,TERMINAL_CODE from cd_terminal
+    </select>
+    <select id="listMachines" resultType="com.wdnyjx.Entity.DB.FrameAndType">
+        select FRAME_NUMBER as frameNum,MACHINE_TYPE as machineType from cd_machine
+    </select>
+    <select id="listMachineAndTml" resultType="com.wdnyjx.Entity.DB.MachineAndTml">
+        select
+            FRAME_NUMBER as frameNum,
+            cm.TML_ID as tmlId,
+            ct.TERMINAL_CODE as tmlCode,
+            cm.MACHINE_TYPE as machineType,
+            so.parent_id as regionCode
+        from cd_machine cm
+        left join cd_terminal ct
+        on	cm.TML_ID =ct.ID
+        left join sys_office so
+        on cm.BELONG_GROUP_ID =so.id
+        where so.parent_id like '36%'
+    </select>
+</mapper>
